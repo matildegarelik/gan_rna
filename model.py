@@ -40,6 +40,31 @@ class Generator(nn.Module):
         x = torch.cat([x, lengths], dim=1)
         output = self.model(x)
         output = output.view(-1, self.max_seq_length, self.output_dim)
-        max_indices = torch.argmax(output, dim=-1)
-        one_hot_output = F.one_hot(max_indices, num_classes=self.output_dim).float()
-        return one_hot_output
+
+        #max_indices = torch.argmax(output, dim=-1)
+        #one_hot_output = F.one_hot(max_indices, num_classes=self.output_dim).float()
+        return output
+    
+
+
+#calcula la perdida de padding, penalizando las posiciones que deberían estar en padding pero no lo están (no son completamente -1).
+#entradas: generated_samples (salidas del generador: batch_size, max_seq_length, 4) y  output_lengths (longitudes esperadas de cada secuencia en el batch)
+
+def padding_loss(generated_samples, output_lengths,device):
+    batch_size, max_seq_length, _ = generated_samples.size()
+    loss = 0
+
+    for i in range(batch_size):
+        length = output_lengths[i]
+
+        # crear una máscara donde las posiciones que deberían estar en padding sean 1
+        mask = (torch.arange(max_seq_length).to(device) >= length).float()
+        mask = mask.unsqueeze(1).expand_as(generated_samples[i])  # expandir a (max_seq_length, 4)
+        
+        #print(length)
+        #print(mask)
+
+        # penalización para las posiciones no padding que no son [-1, -1, -1, -1]
+        loss += F.binary_cross_entropy_with_logits(generated_samples[i] * mask, torch.full_like(generated_samples[i], -1) * mask)
+    
+    return loss / batch_size

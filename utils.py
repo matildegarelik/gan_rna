@@ -1,15 +1,19 @@
 import numpy as np
 
 def rna_to_one_hot(seq, max_length):
-    mapping = {'A': 0, 'C': 1, 'G': 2, 'U': 3, 'X': -1}
-    one_hot = np.full((max_length, 4), -1)
+    mapping = {'A': 0, 'C': 1, 'G': 2, 'U': 3}
+    one_hot = np.zeros((max_length, 4))  # inicializar con ceros
     
     for idx, base in enumerate(seq):
-        if base in mapping and mapping[base] != -1:
+        if base in mapping:
             one_hot[idx, mapping[base]] = 1
         elif base == 'X':
-            one_hot[idx] = [-1, -1, -1, -1]
+            one_hot[idx] = [-1, -1, -1, -1]  
     
+    # relleno de padding para la longitud restante
+    if len(seq) < max_length:
+        one_hot[len(seq):] = [-1, -1, -1, -1]
+
     return one_hot
 
 def one_hot_to_rna_with_padding(one_hot_seq):
