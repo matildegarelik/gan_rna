@@ -6,7 +6,7 @@ from torch import nn
 from torch.optim import Adam
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
 from model import Generator, Discriminator
-from train import train_gan
+from train import train
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -38,6 +38,7 @@ train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shu
 num_epochs = 600
 loss_function = nn.BCELoss()
 
+mu=1
 lr = 0.0002
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
 optimizer_generator = Adam(generator.parameters(), lr=lr*10)
@@ -47,4 +48,4 @@ with open('GAN_log.csv', mode='w', newline='') as file:
     writer.writerow(['Epoch', 'disc_loss', 'gen_loss'])
 
 # Entrenamiento
-train_gan(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length)
+train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu)
