@@ -12,9 +12,12 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
 
             # generar muestras falsas
-            latent_space_samples = torch.randn((real_samples.size(0), latent_dim)).to(device)
             random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
-            generated_samples = generator(latent_space_samples, random_lengths)
+            latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device)
+            for i, length in enumerate(random_lengths):
+                latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
+                latent_space_samples[i, length:] = -1
+            generated_samples = generator(latent_space_samples)
 
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
             
@@ -35,9 +38,15 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device)
 
             # datos para entrenar el generador
-            latent_space_samples = torch.randn((real_samples.size(0), latent_dim)).to(device)
             random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
-            generated_samples = generator(latent_space_samples, random_lengths)
+            latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device) # vector del mismo tamaño que la 
+            # secuencia generada: las posiciones correspondientes a nucleotidos se rellenan con valores aleatorios entre 0 y 1, 
+            # y las posiciones que deben ser padding se establecen en -1.
+            for i, length in enumerate(random_lengths):
+                latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
+                latent_space_samples[i, length:] = -1
+
+            generated_samples = generator(latent_space_samples)
 
             # salida del discriminador para las muestras generadas
             output_discriminator_generated = discriminator(generated_samples)
@@ -58,11 +67,16 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
             # mostrar algunas secuencias generadas
             with torch.no_grad():
-                sample_latent_space = torch.randn((5, latent_dim)).to(device)
-                random_lengths = torch.randint(1, max_seq_length + 1, (5,)).to(device)
-                generated_samples = generator(sample_latent_space, random_lengths)
+                random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
+                latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device)
+                for i, length in enumerate(random_lengths):
+                    latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
+                    latent_space_samples[i, length:] = -1
+                generated_samples = generator(latent_space_samples)
+
                 generated_samples = generated_samples.cpu().numpy()
 
                 for i, sample in enumerate(generated_samples):
                     rna_seq = one_hot_to_rna_with_padding(sample)
                     print(f"Secuencia {i + 1} generada en la época {epoch}: {rna_seq}")
+                    print(f"Entrada del generador: {latent_space_samples[i]}")

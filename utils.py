@@ -20,14 +20,12 @@ def one_hot_to_rna_with_padding(one_hot_seq):
     mapping = {0: 'A', 1: 'C', 2: 'G', 3: 'U'}
     seq = ""
     for base in one_hot_seq:
-        if np.array_equal(base, [-1, -1, -1, -1]):
-            seq += 'X'
-        else:
+        max_value = np.max(base)
+        if max_value > 0.5:
             idx = np.argmax(base)
-            if base[idx] == 1:
-                seq += mapping[idx]
-            else:
-                seq += 'X'
+            seq += mapping[idx]
+        else:
+            seq += 'X'    
     return seq
 
 def one_hot_to_rna(one_hot_seq):
