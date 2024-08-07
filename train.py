@@ -12,7 +12,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
 
             # generar muestras falsas
-            random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
+            random_lengths = torch.randint(30, max_seq_length + 1, (real_samples.size(0),)).to(device)
             latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device)
             for i, length in enumerate(random_lengths):
                 latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
@@ -38,7 +38,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device)
 
             # datos para entrenar el generador
-            random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
+            random_lengths = torch.randint(30, max_seq_length + 1, (real_samples.size(0),)).to(device)
             latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device) # vector del mismo tamaño que la 
             # secuencia generada: las posiciones correspondientes a nucleotidos se rellenan con valores aleatorios entre 0 y 1, 
             # y las posiciones que deben ser padding se establecen en -1.
@@ -67,7 +67,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
             # mostrar algunas secuencias generadas
             with torch.no_grad():
-                random_lengths = torch.randint(1, max_seq_length + 1, (real_samples.size(0),)).to(device)
+                random_lengths = torch.randint(30, max_seq_length + 1, (real_samples.size(0),)).to(device)
                 latent_space_samples = torch.zeros((real_samples.size(0), max_seq_length)).to(device)
                 for i, length in enumerate(random_lengths):
                     latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
