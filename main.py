@@ -12,7 +12,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Parámetros
-input_dim = 4  # Dimensión de la codificación one-hot
+input_dim = 5  # Dimensión de la codificación one-hot
 latent_dim = 100  # Dimensión del vector aleatorio de entrada
 
 # DATOS
@@ -31,17 +31,17 @@ real_data = torch.tensor(real_data, dtype=torch.float)
 train_data_length = len(real_data)
 train_labels = torch.zeros(train_data_length)
 train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
-
+            
 batch_size = 10
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
 
 num_epochs = 600
 loss_function = nn.BCELoss()
 
-mu=1
-lr = 0.0002
+mu = .01
+lr = 1e-4
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
-optimizer_generator = Adam(generator.parameters(), lr=lr*10)
+optimizer_generator = Adam(generator.parameters(), lr=lr)
 
 with open('GAN_log.csv', mode='w', newline='') as file:
     writer = csv.writer(file)

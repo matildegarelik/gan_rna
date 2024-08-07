@@ -18,15 +18,15 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         x = x.view(-1, self.seq_length * self.input_dim)
-        padding_mask = (x != -1).float()
-        x = x * padding_mask
+        #padding_mask = (x != -1).float()
+        #x = x * padding_mask
         return self.model(x)
 
 class Generator(nn.Module):
     def __init__(self, input_dim, output_dim, max_seq_length):
         super(Generator, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_dim+1, 128),
+            nn.Linear(input_dim, 128),
             nn.ReLU(),
             nn.Linear(128, 256),
             nn.ReLU(),
@@ -36,8 +36,9 @@ class Generator(nn.Module):
         self.output_dim = output_dim
 
     def forward(self, x, lengths):
-        lengths = lengths.unsqueeze(1).float() / self.max_seq_length 
-        x = torch.cat([x, lengths], dim=1)
+        lengths = lengths.unsqueeze(1).float()
+        for l in range(len(lengths)):
+            x[l,int(lengths[l]):] = -1
         output = self.model(x)
         output = output.view(-1, self.max_seq_length, self.output_dim)
 
@@ -58,13 +59,16 @@ def padding_loss(generated_samples, output_lengths,device):
         length = output_lengths[i]
 
         # crear una máscara donde las posiciones que deberían estar en padding sean 1
-        mask = (torch.arange(max_seq_length).to(device) >= length).float()
-        mask = mask.unsqueeze(1).expand_as(generated_samples[i])  # expandir a (max_seq_length, 4)
+        #mask = (torch.arange(max_seq_length).to(device) >= length).float()
+        #mask = mask.unsqueeze(1).expand_as(generated_samples[i])  # expandir a (max_seq_length, 4)
         
         #print(length)
         #print(mask)
 
-        # penalización para las posiciones no padding que no son [-1, -1, -1, -1]
-        loss += F.binary_cross_entropy_with_logits(generated_samples[i] * mask, torch.full_like(generated_samples[i], -1) * mask)
-    
+        # penalización para las posiciones padding que no son [0,0,0,0,1]
+        pred_pad = generated_samples[i, output_lengths[i]:, :]
+        ref = torch.zeros_like(pred_pad)
+        ref[:, -1] = 1
+        loss += F.cross_entropy(pred_pad, ref)
+
     return loss / batch_size
