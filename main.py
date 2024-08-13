@@ -7,6 +7,13 @@ from torch.optim import Adam
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
 from model import Generator, Discriminator
 from train import train
+from pretrain import pretrain_generator_as_autoencoder
+import os
+from datetime import datetime
+
+if not os.path.exists('results'):
+    os.makedirs('results')
+log_filename = f'results/log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -43,9 +50,14 @@ lr = 0.0002
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
 optimizer_generator = Adam(generator.parameters(), lr=lr*10)
 
-with open('GAN_log.csv', mode='w', newline='') as file:
+with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['Epoch', 'disc_loss', 'gen_loss'])
 
-# Entrenamiento
-train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu)
+
+pretrain_epochs = 100
+noise_levels = [0.0, 0.1, 0.2, 0.5, 1.0]  # diferentes niveles de ruido que se van a ir introduciendo
+loss_function_pretrain = nn.MSELoss()
+
+pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
+train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename)

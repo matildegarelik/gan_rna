@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import random
 
 def rna_to_one_hot(seq, max_length):
     mapping = {'A': 0, 'C': 1, 'G': 2, 'U': 3}
@@ -61,3 +62,21 @@ def generate_latent_space_samples(batch_size, max_seq_length, device):
         latent_space_samples[i, :length] = torch.rand(length.item()).to(device)
         latent_space_samples[i, length:] = -1
     return latent_space_samples, random_lengths
+
+
+def one_hot_to_continuous(one_hot_samples):
+    continuous_output = torch.zeros(one_hot_samples.size(0))
+
+    for i, one_hot_vector in enumerate(one_hot_samples):
+        if one_hot_vector[0] == 1:  # A
+            continuous_output[i] = random.uniform(0, 0.25)
+        elif one_hot_vector[1] == 1:  # C
+            continuous_output[i] = random.uniform(0.25, 0.5)
+        elif one_hot_vector[2] == 1:  # G
+            continuous_output[i] = random.uniform(0.5, 0.75)
+        elif one_hot_vector[3] == 1:  # U
+            continuous_output[i] = random.uniform(0.75, 1.0)
+        elif torch.all(one_hot_vector == -1):  # Padding
+            continuous_output[i] = -1
+    
+    return continuous_output
