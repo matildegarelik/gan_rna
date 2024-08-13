@@ -5,7 +5,7 @@ from torch.optim import Adam
 from utils import continuous_to_one_hot, generate_latent_space_samples, one_hot_to_rna_with_padding
 from model import padding_loss
 
-def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu):
+def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename):
     for epoch in range(num_epochs):
         for n, (real_samples, _) in enumerate(train_loader):
             real_samples = real_samples.to(device)
@@ -29,28 +29,24 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             loss_discriminator.backward()
             optimizer_discriminator.step()
 
-        # entrenamiento del generador
-        for n, (real_samples, _) in enumerate(train_loader):
-            real_samples = real_samples.to(device)
-            real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device)
+        # entrenamiento del generador (5 veces x epoca del discriminador)
+            for _ in range(5):
+                latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+                generated_samples = generator(latent_space_samples)
+                generated_samples_one_hot = continuous_to_one_hot(generated_samples)
 
-            # datos para entrenar el generador
-            latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
-            generated_samples = generator(latent_space_samples)
-            generated_samples_one_hot = continuous_to_one_hot(generated_samples)
+                # salida del discriminador para las muestras generadas
+                output_discriminator_generated = discriminator(generated_samples_one_hot)
 
-            # salida del discriminador para las muestras generadas
-            output_discriminator_generated = discriminator(generated_samples_one_hot)
-
-            # pérdida del generador
-            padding_loss_value = padding_loss(generated_samples, random_lengths, device)
-            loss_generator = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
-            loss_generator.backward()
-            optimizer_generator.step()
+                # pérdida del generador
+                padding_loss_value = padding_loss(generated_samples, random_lengths, device)
+                loss_generator = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
+                loss_generator.backward()
+                optimizer_generator.step()
 
         # mostrar y guardar las pérdidas cada 10 épocas
         if epoch % 10 == 0:
-            with open('GAN_log.csv', mode='a', newline='') as file:
+            with open(log_filename, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([epoch, loss_discriminator.item(), loss_generator.item()])
             
