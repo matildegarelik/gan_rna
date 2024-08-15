@@ -21,6 +21,6 @@ def pretrain_generator_as_autoencoder(generator, real_samples, optimizer, loss_f
                 loss.backward()
                 optimizer.step()
 
-        if epoch % 10 == 0:
+        if epoch % 1 == 0:
             print(f"Epoch {epoch}, Loss: {loss.item()}")
 

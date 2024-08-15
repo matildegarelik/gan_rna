@@ -18,8 +18,8 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         x = x.view(-1, self.seq_length * self.input_dim)
-        padding_mask = (x != -1).float()
-        x = x * padding_mask
+        #padding_mask = (x != -1).float()
+        #x = x * padding_mask
         return self.model(x)
 
 class Generator(nn.Module):
@@ -52,9 +52,10 @@ def padding_loss(generated_samples, output_lengths, device):
         length = output_lengths[i]
 
         # crear una máscara donde las posiciones que deberían estar en padding sean 1
-        mask = (torch.arange(max_seq_length).to(device) >= length).float()
+        mask0 = (torch.arange(max_seq_length).to(device) < length).float()
+        mask1 = (torch.arange(max_seq_length).to(device) >= length).float()
 
         # penalización para las posiciones no padding que no son -1
-        loss += F.mse_loss(generated_samples[i] * mask, torch.full_like(generated_samples[i], -1) * mask)
+        loss =  loss + F.mse_loss(generated_samples[i] * mask0, torch.full_like(generated_samples[i], .5) * mask0) + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
     
     return loss / batch_size

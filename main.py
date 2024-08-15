@@ -39,16 +39,16 @@ train_data_length = len(real_data)
 train_labels = torch.zeros(train_data_length)
 train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 
-batch_size = 10
+batch_size = 8
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
 
 num_epochs = 600
 loss_function = nn.BCELoss()
 
-mu=1
-lr = 0.0002
+mu = .1
+lr = 1e-6
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
-optimizer_generator = Adam(generator.parameters(), lr=lr*10)
+optimizer_generator = Adam(generator.parameters(), lr=2*lr)
 
 with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
@@ -59,5 +59,5 @@ pretrain_epochs = 100
 noise_levels = [0.0, 0.1, 0.2, 0.5, 1.0]  # diferentes niveles de ruido que se van a ir introduciendo
 loss_function_pretrain = nn.MSELoss()
 
-pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
+#pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
 train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename)
