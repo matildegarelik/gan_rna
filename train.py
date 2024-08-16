@@ -5,7 +5,7 @@ from torch.optim import Adam
 from utils import continuous_to_one_hot, generate_latent_space_samples, one_hot_to_rna_with_padding
 from model import padding_loss
 
-def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename):
+def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename, sequences_filename):
     for epoch in range(num_epochs):
         for n, (real_samples, _) in enumerate(train_loader):
             real_samples = real_samples.to(device)
@@ -45,22 +45,29 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 optimizer_generator.step()
 
         # mostrar y guardar las pérdidas cada 10 épocas
-        if epoch % 10 == 0:
+        if epoch % 1 == 0:
             with open(log_filename, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([epoch, loss_discriminator.item(), loss_generator.item()])
             
             print(f"Epoch {epoch} - Loss Discriminator: {loss_discriminator.item()}, Loss Generator: {loss_generator.item()}")
 
-            # mostrar algunas secuencias generadas
-            with torch.no_grad():
-                latent_space_samples, _ = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
-                generated_samples = generator(latent_space_samples)
-                generated_samples_one_hot = continuous_to_one_hot(generated_samples)
+            # Guardar secuencias reales y generadas en un CSV
+            with open(sequences_filename, mode='a', newline='') as seq_file:
+                seq_writer = csv.writer(seq_file)
+                
+                with torch.no_grad():
+                    latent_space_samples, _ = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+                    generated_samples = generator(latent_space_samples)
+                    generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
+                    generated_samples_one_hot = generated_samples_one_hot.cpu().numpy()
 
-                generated_samples_one_hot = generated_samples_one_hot.cpu().numpy()
+                    real_samples_one_hot = real_samples.cpu().numpy()
 
-                for i, sample in enumerate(generated_samples_one_hot):
-                    rna_seq = one_hot_to_rna_with_padding(sample)
-                    print(f"Secuencia {i + 1} generada en la época {epoch}: {rna_seq}")
-                    #print(f"Entrada del generador: {latent_space_samples[i]}")
+                    for i in range(real_samples.size(0)):
+                        real_rna_seq = one_hot_to_rna_with_padding(real_samples_one_hot[i])
+                        generated_rna_seq = one_hot_to_rna_with_padding(generated_samples_one_hot[i])
+                        seq_writer.writerow([epoch, real_rna_seq, generated_rna_seq, loss_discriminator.item()])
+                        print(f"Secuencia {i + 1} generada en la época {epoch}: {generated_rna_seq}")
+            
+

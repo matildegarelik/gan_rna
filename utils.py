@@ -49,7 +49,7 @@ def continuous_to_one_hot(generated_samples, num_classes=4):
                     one_hot_output[i, j, 1] = 1  # C
                 elif value < 0.75:
                     one_hot_output[i, j, 2] = 1  # G
-                elif value <= 1.0:
+                else:
                     one_hot_output[i, j, 3] = 1  # U
             else:
                 one_hot_output[i, j, :] = -1  # Padding
