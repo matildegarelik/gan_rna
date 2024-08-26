@@ -57,6 +57,8 @@ def padding_loss(generated_samples, output_lengths, device):
 
 
         # penalización para las posiciones no padding que no son -1
-        loss =  loss + F.mse_loss(generated_samples[i] * mask0, torch.full_like(generated_samples[i], .5) * mask0) + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
+        #loss =  loss + F.mse_loss(generated_samples[i] * mask0, torch.full_like(generated_samples[i], .5) * mask0) + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
+        loss =  loss + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
     
+
     return loss / batch_size

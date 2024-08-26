@@ -7,6 +7,10 @@ from model import padding_loss
 
 def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename, sequences_filename):
     for epoch in range(num_epochs):
+        all_real_samples = []
+        all_generated_samples = []
+        all_loss_discriminator_individual = []
+
         for n, (real_samples, _) in enumerate(train_loader):
             real_samples = real_samples.to(device)
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
@@ -25,7 +29,9 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # entrenamiento del discriminador
             discriminator.zero_grad()
             output_discriminator = discriminator(all_samples)
-            loss_discriminator = loss_function(output_discriminator, all_samples_labels)
+            #loss_discriminator = loss_function(output_discriminator, all_samples_labels)
+            loss_discriminator_individual = loss_function(output_discriminator, all_samples_labels)
+            loss_discriminator = loss_discriminator_individual.mean()
             loss_discriminator.backward()
             optimizer_discriminator.step()
 
@@ -40,15 +46,22 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
                 # pérdida del generador
                 padding_loss_value = padding_loss(generated_samples, random_lengths, device)
-                loss_generator = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
+                #loss_generator = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
+                loss_generator_individual = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
+                loss_generator = loss_generator_individual.mean()
                 loss_generator.backward()
                 optimizer_generator.step()
+
+            all_real_samples.append(real_samples.cpu().numpy())
+            all_generated_samples.append(generated_samples_one_hot.cpu().numpy())
+            all_loss_discriminator_individual.append(loss_discriminator_individual.detach().cpu().numpy())
 
         # mostrar y guardar las pérdidas cada 10 épocas
         if epoch % 1 == 0:
             with open(log_filename, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([epoch, loss_discriminator.item(), loss_generator.item()])
+
             
             print(f"Epoch {epoch} - Loss Discriminator: {loss_discriminator.item()}, Loss Generator: {loss_generator.item()}")
 
@@ -57,17 +70,8 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 seq_writer = csv.writer(seq_file)
                 
                 with torch.no_grad():
-                    latent_space_samples, _ = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
-                    generated_samples = generator(latent_space_samples)
-                    generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
-                    generated_samples_one_hot = generated_samples_one_hot.cpu().numpy()
-
-                    real_samples_one_hot = real_samples.cpu().numpy()
-
-                    for i in range(real_samples.size(0)):
-                        real_rna_seq = one_hot_to_rna_with_padding(real_samples_one_hot[i])
-                        generated_rna_seq = one_hot_to_rna_with_padding(generated_samples_one_hot[i])
-                        seq_writer.writerow([epoch, real_rna_seq, generated_rna_seq, loss_discriminator.item()])
-                        print(f"Secuencia {i + 1} generada en la época {epoch}: {generated_rna_seq}")
-            
-
+                    for i in range(len(all_real_samples)):
+                        for j in range(all_real_samples[i].shape[0]):
+                            real_rna_seq = one_hot_to_rna_with_padding(all_real_samples[i][j])
+                            generated_rna_seq = one_hot_to_rna_with_padding(all_generated_samples[i][j])
+                            seq_writer.writerow([epoch, real_rna_seq, generated_rna_seq, all_loss_discriminator_individual[i][j].item()])

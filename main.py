@@ -40,11 +40,13 @@ train_data_length = len(real_data)
 train_labels = torch.zeros(train_data_length)
 train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 
-batch_size = 10
+batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
 
 num_epochs = 600
-loss_function = nn.BCELoss()
+#loss_function = nn.BCELoss()
+loss_function = nn.BCELoss(reduction='none')
+
 
 mu = .1
 lr = 1e-6

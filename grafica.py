@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('results\seq_20240816_090754.csv')
+df = pd.read_csv('results\seq_20240825_184511.csv')
 
 epochs_to_plot = [0, 25, 50, 75, 100, 150, 200, 300, 400, 600]
 
