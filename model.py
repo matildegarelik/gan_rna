@@ -37,7 +37,23 @@ class Generator(nn.Module):
     def forward(self, x):
         output = self.model(x)
         return output
-    
+
+class Generator2(nn.Module):
+    def __init__(self, input_dim, output_dim, max_seq_length):
+        super(Generator, self).__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 256),
+            nn.ReLU(),
+            nn.Linear(256, max_seq_length)
+        )
+        self.max_seq_length = max_seq_length
+
+    def forward(self, x):
+        output = self.model(x)
+        # tomar longitud random y cortar ahi, llenar con x hasta 100
+        return output
 
 
 #calcula la perdida de padding, penalizando las posiciones que deberían estar en padding pero no lo están (no son completamente -1).

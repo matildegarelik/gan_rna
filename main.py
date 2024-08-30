@@ -59,7 +59,7 @@ with open(log_filename, mode='w', newline='') as file:
 
 with open(sequences_filename, mode='w', newline='') as seq_file:
     seq_writer = csv.writer(seq_file)
-    seq_writer.writerow(['Epoch', 'Real Sequence', 'Generated Sequence', 'Discriminator Loss'])
+    seq_writer.writerow(['Epoch', 'Sequence', 'Type', 'Discriminator Loss'])
 
 
 
