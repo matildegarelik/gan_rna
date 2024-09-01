@@ -67,14 +67,17 @@ def padding_loss(generated_samples, output_lengths, device):
     for i in range(batch_size):
         length = output_lengths[i]
 
-        # crear una máscara donde las posiciones que deberían estar en padding sean 1
-        mask0 = (torch.arange(max_seq_length).to(device) < length).float()
-        mask1 = (torch.arange(max_seq_length).to(device) >= length).float()
-
-
         # penalización para las posiciones no padding que no son -1
         #loss =  loss + F.mse_loss(generated_samples[i] * mask0, torch.full_like(generated_samples[i], .5) * mask0) + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
-        seq_loss = F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
+        
+        # penalización para las posiciones que no cumplen la longitud esperada.
+        generated_samples_clamp = -F.relu(-generated_samples[i,:])
+        seq_label = torch.full_like(generated_samples[i], 0, device=device)
+        seq_label[length:] = -1 # padding
+        
+        #seq_loss = F.mse_loss(generated_samples[i, length:], torch.full_like(generated_samples[i, length:], -1))
+        seq_loss = F.mse_loss(generated_samples_clamp, seq_label)
+        
         loss[i] = seq_loss
     
     return loss
