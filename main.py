@@ -50,7 +50,7 @@ loss_function = nn.BCELoss(reduction='none')
 
 
 mu = .1
-lr = 1e-6
+lr = 1e-4
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
 optimizer_generator = Adam(generator.parameters(), lr=2*lr)
 
