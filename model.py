@@ -62,7 +62,7 @@ class Generator2(nn.Module):
 
 def padding_loss(generated_samples, output_lengths, device):
     batch_size, max_seq_length = generated_samples.size()
-    loss = 0
+    loss = torch.zeros(batch_size, device=device) # devuelve el loss por secuencia
 
     for i in range(batch_size):
         length = output_lengths[i]
@@ -74,7 +74,7 @@ def padding_loss(generated_samples, output_lengths, device):
 
         # penalización para las posiciones no padding que no son -1
         #loss =  loss + F.mse_loss(generated_samples[i] * mask0, torch.full_like(generated_samples[i], .5) * mask0) + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
-        loss =  loss + F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
+        seq_loss = F.mse_loss(generated_samples[i] * mask1, torch.full_like(generated_samples[i], -1) * mask1)
+        loss[i] = seq_loss
     
-
-    return loss / batch_size
+    return loss

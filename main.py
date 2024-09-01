@@ -14,8 +14,8 @@ from datetime import datetime
 if not os.path.exists('results'):
     os.makedirs('results')
 log_filename = f'results/log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-sequences_filename = f'results/seq_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-gen_filename = f'results/gen_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+real_sequences_filename = f'results/seq_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+gen_sequences_filename = f'results/gen_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -58,19 +58,9 @@ with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['Epoch', 'disc_loss', 'gen_loss'])
 
-with open(sequences_filename, mode='w', newline='') as seq_file:
-    seq_writer = csv.writer(seq_file)
-    seq_writer.writerow(['Epoch', 'Sequence', 'Type', 'Discriminator Loss'])
-
-with open(gen_filename, mode='w', newline='') as seq_file:
-    seq_writer = csv.writer(seq_file)
-    seq_writer.writerow(['Epoch', 'Sequence', 'Loss 1', 'Padding Loss'])
-
-
-
 pretrain_epochs = 100
 noise_levels = [0.0, 0.1, 0.2, 0.5, 1.0]  # diferentes niveles de ruido que se van a ir introduciendo
 loss_function_pretrain = nn.MSELoss()
 
 #pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
-train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, sequences_filename, gen_filename)
+train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename, gen_sequences_filename)
