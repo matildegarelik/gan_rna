@@ -45,7 +45,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # log secuencias reales
             for i in range(len(generated_samples)):
                 real_rna_seq = one_hot_to_rna_with_padding(real_samples[i].cpu().numpy())
-                real_seq_logger.writerow([epoch, n, real_rna_seq, loss_discriminator_real[i].item()])
+                real_seq_logger.writerow([epoch, n, real_rna_seq, f"{loss_discriminator_real[i].item():.2f}"])
                 
             # Entrenamiento del discriminador combinando las pérdidas reales y generadas 
             # ( ojo que el promedio de la suma no es igual al promedio de la concatenación)
@@ -74,7 +74,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 for i in range(len(generated_samples)):
                     generated_rna_seq = one_hot_to_rna_with_padding(generated_samples_one_hot[i].cpu().numpy())                            
                     gen_seq_logger.writerow([epoch, n, gen_iter, generated_rna_seq, 
-                                         generator_loss_value[i].item(), padding_loss_value[i].item(), random_lengths[i].item()])
+                                         f"{generator_loss_value[i].item()}", f"{padding_loss_value[i].item()}", random_lengths[i].item()])
                     
                 # este si es el promedio de la suma
                 loss_generator = (generator_loss_value + mu*padding_loss_value).mean()
@@ -85,7 +85,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
         if epoch % 1 == 0:
             with open(log_filename, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([epoch, loss_discriminator.item(), loss_generator.item()])
+                writer.writerow([epoch, f"{loss_discriminator.item():.2f}", f"{loss_generator.item():.2f}" ])
             
             print(f"Epoch {epoch} - Loss Discriminator: {loss_discriminator.item()}, Loss Generator: {loss_generator.item()}")
     
