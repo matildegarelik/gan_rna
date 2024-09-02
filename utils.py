@@ -41,8 +41,9 @@ def one_hot_to_rna(one_hot_seq):
 def continuous_to_one_hot(generated_samples, num_classes=4):
     one_hot_output = torch.zeros(generated_samples.size(0), generated_samples.size(1), num_classes)
     for i, sample in enumerate(generated_samples):
+        is_padding = False # force padding after the first predicted X
         for j, value in enumerate(sample):
-            if value>=0:
+            if (value>=0) and not is_padding:
                 if value < 0.25:
                     one_hot_output[i, j, 0] = 1  # A
                 elif value < 0.5:
@@ -53,6 +54,7 @@ def continuous_to_one_hot(generated_samples, num_classes=4):
                     one_hot_output[i, j, 3] = 1  # U
             else:
                 one_hot_output[i, j, :] = -1  # Padding
+                is_padding = True
     return one_hot_output
 
 def generate_latent_space_samples(batch_size, max_seq_length, device):
