@@ -50,9 +50,9 @@ loss_function = nn.BCELoss(reduction='none')
 
 
 mu = .1
-lr = 1e-4
+lr = 5e-5
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
-optimizer_generator = Adam(generator.parameters(), lr=2*lr)
+optimizer_generator = Adam(generator.parameters(), lr=lr)
 
 with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
