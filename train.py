@@ -50,13 +50,16 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # Entrenamiento del discriminador combinando las pérdidas reales y generadas 
             # ( ojo que el promedio de la suma no es igual al promedio de la concatenación)
             loss_discriminator = torch.cat((loss_discriminator_real, loss_discriminator_generated)).mean()
-            loss_discriminator.backward()
-            optimizer_discriminator.step()
+            
+            #if epoch % 4 == 0: # entrena el discriminador cada tantas iteraciones
+            if epoch <= 10: # entrena el discriminador solo hasta n epocas
+                loss_discriminator.backward()
+                optimizer_discriminator.step()
                      
             discriminator.eval()
             generator.train()
             # entrenamiento del generador (5 veces x epoca del discriminador)
-            for gen_iter in range(5):
+            for gen_iter in range(1):
                 discriminator.zero_grad()
                 generator.zero_grad()
                 latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
