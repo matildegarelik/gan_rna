@@ -18,8 +18,9 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         x = x.view(-1, self.seq_length * self.input_dim)
-        #padding_mask = (x != -1).float()
-        #x = x * padding_mask
+
+        padding_mask = (x != -1).float()
+        x = x * padding_mask
         return self.model(x)
 
 class Generator(nn.Module):
@@ -30,12 +31,15 @@ class Generator(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 256),
             nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
             nn.Linear(256, max_seq_length)
         )
         self.max_seq_length = max_seq_length
 
     def forward(self, x):
         output = self.model(x)
+            
         return output
 
 class Generator2(nn.Module):
