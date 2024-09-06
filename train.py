@@ -14,8 +14,21 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
     gen_seq_logfile = open(gen_seq_filename, mode='a', newline='')
     gen_seq_logger = csv.writer(gen_seq_logfile) 
     gen_seq_logger.writerow(["epoch", "discriminator_batch", "generator_batch", "sequence", "loss", "padding_loss", "gen_len"]) # header
-                                
+
+    initial_discriminator_loss = None
+    initial_generator_loss = None
+    train_gen= True
+    train_disc=True
+    print_train_gen = False
+    print_train_disc = True
+
     for epoch in range(num_epochs):
+        if print_train_disc:
+            print('--------Entrenando solo discriminador-------')
+            print_train_disc= False
+        elif print_train_gen:
+            print('--------Entrenando solo generador-------')
+            print_train_gen= False
         
         for n, (real_samples, _) in enumerate(train_loader):
             real_samples = real_samples.to(device)
@@ -53,9 +66,11 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             
             #if epoch % 4 == 0: # entrena el discriminador cada tantas iteraciones
             if epoch <= 10: # entrena el discriminador solo hasta n epocas
+                initial_discriminator_loss = loss_discriminator.item()
                 loss_discriminator.backward()
                 optimizer_discriminator.step()
-                     
+            
+
             discriminator.eval()
             generator.train()
             # entrenamiento del generador (5 veces x epoca del discriminador)
@@ -81,9 +96,31 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                     
                 # este si es el promedio de la suma
                 loss_generator = (generator_loss_value + mu*padding_loss_value).mean()
-                loss_generator.backward()
-                optimizer_generator.step()
                 
+                if epoch>10 and loss_discriminator.item()<= initial_discriminator_loss*1.2 and train_gen:
+                    train_disc=False
+                    initial_generator_loss = loss_generator.item()
+                    loss_generator.backward()
+                    optimizer_generator.step()
+                    print_train_gen= True
+                    print_train_disc= False
+            
+            
+            if loss_discriminator.item() > initial_discriminator_loss*1.2:
+                train_disc = True
+                train_gen = False
+
+            if epoch>10 and train_disc and loss_generator.item() <= initial_generator_loss*1.1:
+                initial_discriminator_loss = loss_discriminator.item()
+                loss_discriminator.backward()
+                optimizer_discriminator.step()
+                print_train_disc= True
+                print_train_gen= False
+
+            else:
+                train_disc= False
+                train_gen=True
+
         # mostrar y guardar las pérdidas cada época
         if epoch % 1 == 0:
             with open(log_filename, mode='a', newline='') as file:
@@ -91,7 +128,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 writer.writerow([epoch, f"{loss_discriminator.item():.2f}", f"{loss_generator.item():.2f}" ])
             
             print(f"Epoch {epoch} - Loss Discriminator: {loss_discriminator.item()}, Loss Generator: {loss_generator.item()}")
-    
+        
     real_seq_logfile.close()
     gen_seq_logfile.close()
     
