@@ -23,10 +23,10 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
     print_train_disc = True
 
     for epoch in range(num_epochs):
-        if print_train_disc:
+        if print_train_disc and train_disc:
             print('--------Entrenando solo discriminador-------')
             print_train_disc= False
-        elif print_train_gen:
+        elif print_train_gen and train_gen:
             print('--------Entrenando solo generador-------')
             print_train_gen= False
         
@@ -69,6 +69,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 initial_discriminator_loss = loss_discriminator.item()
                 loss_discriminator.backward()
                 optimizer_discriminator.step()
+                print_train_gen=True
             
 
             discriminator.eval()
@@ -99,11 +100,10 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 
                 if epoch>10 and loss_discriminator.item()<= initial_discriminator_loss*1.2 and train_gen:
                     train_disc=False
+                    print_train_disc=True
                     initial_generator_loss = loss_generator.item()
                     loss_generator.backward()
                     optimizer_generator.step()
-                    print_train_gen= True
-                    print_train_disc= False
             
             
             if loss_discriminator.item() > initial_discriminator_loss*1.2:
@@ -114,8 +114,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 initial_discriminator_loss = loss_discriminator.item()
                 loss_discriminator.backward()
                 optimizer_discriminator.step()
-                print_train_disc= True
-                print_train_gen= False
+                print_train_gen= True
 
             else:
                 train_disc= False
