@@ -33,7 +33,8 @@ class Generator(nn.Module):
             nn.ReLU(),
             nn.Linear(256, 256),
             nn.ReLU(),
-            nn.Linear(256, max_seq_length)
+            nn.Linear(256, max_seq_length),
+            nn.Tanh()
         )
         self.max_seq_length = max_seq_length
 

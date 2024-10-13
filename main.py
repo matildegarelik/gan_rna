@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import csv
 from torch import nn
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
 from model import Generator, Discriminator
 from train import train
@@ -15,7 +15,7 @@ if not os.path.exists('results'):
     os.makedirs('results')
 log_filename = f'results/log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 real_sequences_filename = f'results/seq_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-gen_sequences_filename = f'results/gen_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+losses_filename = f'results/losses_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -51,16 +51,19 @@ loss_function = nn.BCELoss(reduction='none')
 
 mu = .1
 lr = 5e-5
-optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
-optimizer_generator = Adam(generator.parameters(), lr=lr)
+#optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
+#optimizer_generator = Adam(generator.parameters(), lr=lr)
+
+optimizer_discriminator = SGD(discriminator.parameters(), lr=lr)
+optimizer_generator = SGD(generator.parameters(), lr=lr)
 
 with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Epoch', 'disc_loss', 'gen_loss'])
+    writer.writerow(['Epoch', 'disc_loss', 'gen_loss','Train Disc/Gen'])
 
 pretrain_epochs = 100
 noise_levels = [0.0, 0.1, 0.2, 0.5, 1.0]  # diferentes niveles de ruido que se van a ir introduciendo
 loss_function_pretrain = nn.MSELoss()
 
 #pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
-train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename, gen_sequences_filename)
+train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename, losses_filename)
