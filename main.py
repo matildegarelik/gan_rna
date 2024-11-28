@@ -6,7 +6,7 @@ from torch import nn
 from torch.optim import Adam, SGD
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
 from model import Generator, Discriminator
-from train import train
+from train_fijo import train
 from pretrain import pretrain_generator_as_autoencoder
 import os
 from datetime import datetime
@@ -23,11 +23,11 @@ print(f"Using device: {device}")
 
 # Parámetros
 input_dim = 4  # Dimensión de la codificación one-hot
-latent_dim = 100  # Dimensión del vector aleatorio de entrada
+latent_dim = 200  # Dimensión del vector aleatorio de entrada
 
 # DATOS
 df = pd.read_csv('https://raw.githubusercontent.com/sinc-lab/sincFold/main/data/ArchiveII.csv')
-df = df[df['len'] <= 100]
+df = df[df['len'] <= 200]
 sequences = df['sequence'].tolist()
 max_seq_length = max(len(seq) for seq in sequences)
 
@@ -52,11 +52,11 @@ loss_function = nn.BCELoss(reduction='none')
 
 mu = .1
 lr = 5e-5
-#optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
-#optimizer_generator = Adam(generator.parameters(), lr=lr)
+optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
+optimizer_generator = Adam(generator.parameters(), lr=lr)
 
-optimizer_discriminator = SGD(discriminator.parameters(), lr=lr)
-optimizer_generator = SGD(generator.parameters(), lr=lr)
+#optimizer_discriminator = SGD(discriminator.parameters(), lr=lr)
+#optimizer_generator = SGD(generator.parameters(), lr=lr)
 
 with open(log_filename, mode='w', newline='') as file:
     writer = csv.writer(file)
