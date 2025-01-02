@@ -5,8 +5,8 @@ import csv
 from torch import nn
 from torch.optim import Adam, SGD
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
-from model import Generator, Discriminator
-from train_fijo import train
+from model import Generator, Discriminator, GeneratorCNN
+from train import train
 from pretrain import pretrain_generator_as_autoencoder
 import os
 from datetime import datetime
@@ -18,7 +18,7 @@ real_sequences_filename = f'results/seq_{datetime.now().strftime("%Y%m%d_%H%M%S"
 losses_filename = f'results/losses_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 generated_seq_filename = f'results/generated_seq_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Parámetros
@@ -32,7 +32,7 @@ sequences = df['sequence'].tolist()
 max_seq_length = max(len(seq) for seq in sequences)
 
 # Modelos
-generator = Generator(input_dim=latent_dim, output_dim=input_dim, max_seq_length=max_seq_length).to(device)
+generator = GeneratorCNN(input_dim=latent_dim, output_dim=input_dim, max_seq_length=max_seq_length).to(device)
 discriminator = Discriminator(input_dim=input_dim, seq_length=max_seq_length).to(device)
 
 # Convierte todas las secuencias a One-Hot encoding y pad con -1 si es necesario

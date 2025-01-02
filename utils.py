@@ -58,6 +58,7 @@ def continuous_to_one_hot(generated_samples, num_classes=4):
     return one_hot_output
 
 def generate_latent_space_samples(batch_size, max_seq_length, device):
+    max_seq_length=200
     random_lengths = torch.randint(30, max_seq_length + 1, (batch_size,)).to(device)
     latent_space_samples = torch.zeros((batch_size, max_seq_length)).to(device)
     for i, length in enumerate(random_lengths):

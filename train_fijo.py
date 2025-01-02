@@ -47,6 +47,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # generar muestras falsas
             latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
             generated_samples = generator(latent_space_samples)
+            #print(generated_samples.shape)
             generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
 
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
@@ -63,6 +64,8 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
             # Pérdida del discriminador para las muestras reales y generadas
             loss_discriminator_real = loss_function(output_discriminator_real, real_samples_labels)
+            #print(output_discriminator_generated.size())
+            #print(generated_samples_labels.size())
             loss_discriminator_generated = loss_function(output_discriminator_generated, generated_samples_labels)
 
             # log secuencias reales

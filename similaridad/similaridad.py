@@ -3,7 +3,7 @@ from utils import max_similarity
 
 
 input_file = '../../sincfold-private/data/ArchiveII.csv'
-generadas = pd.read_csv('../results/generated_seq_20241101_104535.csv')
+generadas = pd.read_csv('../results/generated_seq_20241218_122321.csv')
 resultados =[]
 secuencias = generadas['sequence']
 epocas = generadas['epoch']
@@ -23,4 +23,4 @@ for epoch, row in zip(epocas, secuencias):
 df_resultados = pd.DataFrame(resultados, columns=['epoch', 'sequence', 'score'])
 
 
-df_resultados.to_csv('similaridad_20241101_104535.csv', index=False)
+df_resultados.to_csv('similaridad_20241218_122321.csv', index=False)
