@@ -27,14 +27,14 @@ class Generator(nn.Module):
     def __init__(self, input_dim, output_dim, max_seq_length):
         super(Generator, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 256),
-            nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, max_seq_length),
-            nn.Tanh()
+            nn.Linear(input_dim, max_seq_length),
+            #nn.ReLU(),
+            #nn.Linear(128, 256),
+            #nn.ReLU(),
+            #nn.Linear(256, 256),
+            #nn.ReLU(),
+            #nn.Linear(256, max_seq_length),
+            #nn.Tanh()
         )
         self.max_seq_length = max_seq_length
 
@@ -53,21 +53,23 @@ class GeneratorCNN(nn.Module):
 
         # convertir ruido en características iniciales
         #self.linear = nn.Sequential(
-        #    nn.Linear(input_dim, 128),
-        #    nn.ReLU(),
-        #    nn.Linear(128, max_seq_length),  # proyectar al tamaño requerido
-        #    nn.ReLU()
+            #nn.Linear(input_dim, 128),
+            #nn.ReLU(),
+            #nn.Linear(input_dim, max_seq_length),  # proyectar al tamaño requerido
+            #nn.Tanh()
         #)
 
         # bloque convolucional para procesar seq generadas
-        self.conv = nn.Sequential(
-            nn.Conv1d(1, 20, kernel_size=3, stride=1, padding=1),  # mantener longitud
-            nn.ReLU(),
-            nn.Conv1d(20, 10, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv1d(10, 1, kernel_size=3, stride=1, padding=1),
-            nn.Tanh()  # salida en el rango [-1, 1]
-        )
+        #self.conv = nn.Sequential(
+            #nn.Conv1d(1, 1, kernel_size=3, stride=1, padding=1),  # mantener longitud
+            #nn.ReLU(),
+            #nn.Conv1d(20, 10, kernel_size=3, stride=1, padding=1),
+            #nn.ReLU(),
+            #nn.Conv1d(10, 1, kernel_size=3, stride=1, padding=1),
+            #nn.Tanh()  # salida en el rango [-1, 1]
+        #)
+        self.conv = nn.Conv1d(1, 1, kernel_size=3, stride=1, padding=1)
+        self.tan = nn.Tanh()
 
     def forward(self, x):
         batch_size = x.size(0)
@@ -80,8 +82,11 @@ class GeneratorCNN(nn.Module):
         # Reorganizar para Conv1d
         x = x.view(batch_size, 1, self.max_seq_length)  # (batch_size, 1, max_seq_length)
 
+        # 
+        self.conv.weight = nn.Parameter( torch.tensor([[[0.0, 1.0, 0.0]]], device='cuda:1', requires_grad=True))
         # Bloque convolucional
         x = self.conv(x)  # Salida: (batch_size, 1, max_seq_length)
+        x= self.tan(x)
 
         # Quitar dimensión del canal para la salida final
         x = x.squeeze(1)  # (batch_size, max_seq_length)

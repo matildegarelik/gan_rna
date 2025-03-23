@@ -2,8 +2,9 @@ import csv
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from utils import continuous_to_one_hot, generate_latent_space_samples, one_hot_to_rna_with_padding
+from utils import continuous_to_one_hot, generate_latent_space_samples, generate_latent_space_samples2, one_hot_to_rna_with_padding, one_hot_to_continuous
 from model import padding_loss
+import torch.nn.functional as F
 
 def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename, real_seq_filename,generated_seq_filename, losses_filename):
     
@@ -13,7 +14,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
     
     losses_logfile = open(losses_filename, mode='a', newline='')
     losses_logger = csv.writer(losses_logfile) 
-    losses_logger.writerow(["epoch","loss_gen", "padding_loss", "loss_real_disc",'loss_gen_disc','Train Disc/Gen']) # header
+    losses_logger.writerow(["epoch","loss_gen", "padding_loss","mse_loss", "loss_real_disc",'loss_gen_disc','Train Disc/Gen']) # header
 
     generated_seq_logfile = open(generated_seq_filename, mode='a', newline='')
     generated_seq_logger = csv.writer(generated_seq_logfile) 
@@ -45,7 +46,11 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
 
             # generar muestras falsas
-            latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+            latent_space_samples, random_lengths = generate_latent_space_samples2(real_samples.size(0), max_seq_length, device, real_samples)
+            
+            #print(latent_space_samples[0])
+            #print(real_samples_continuous[0])
+            #generated_samples = generator(latent_space_samples)
             generated_samples = generator(latent_space_samples)
             generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
 
@@ -88,7 +93,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             for gen_iter in range(1):
                 discriminator.zero_grad()
                 generator.zero_grad()
-                latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+                latent_space_samples, random_lengths = generate_latent_space_samples2(real_samples.size(0), max_seq_length, device,real_samples)
                 generated_samples = generator(latent_space_samples)
                 generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
 
@@ -98,19 +103,21 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 #loss_generator = loss_function(output_discriminator_generated, real_samples_labels) + mu * padding_loss_value
                 padding_loss_value = padding_loss(generated_samples, random_lengths, device)
                 generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels) 
-                
+                mse_generator_loss = torch.mean((generated_samples - latent_space_samples) ** 2, dim=1)
+
                 # log losses y sequences (si esto es muy lento se puede hacer cada tantas iteraciones)
                 for i in range(len(generated_samples)):
                     generated_rna_seq = one_hot_to_rna_with_padding(generated_samples_one_hot[i].cpu().numpy())  
                     generated_seq_logger.writerow([epoch, n, generated_rna_seq, f"{generator_loss_value[i].item():.2f}"])                          
                     losses_logger.writerow([epoch, 
-                                         f"{generator_loss_value[i].item()}", f"{padding_loss_value[i].item()}",
+                                         f"{generator_loss_value[i].item()}", f"{padding_loss_value[i].item()}", f"{mse_generator_loss[i]}",
                                          f"{loss_discriminator_real[i].item():.2f}",f"{loss_discriminator_generated[i].item():.2f}",
                                          traingd
                                          ])
                     
                 # este si es el promedio de la suma
-                loss_generator = (generator_loss_value + mu*padding_loss_value).mean()
+                #loss_generator = (generator_loss_value + mu*padding_loss_value + mse_generator_loss).mean()
+                loss_generator = (mse_generator_loss).mean()
                 
                 if epoch>10 and loss_discriminator.item()<= initial_discriminator_loss*1.15 and (epoch_first_train_gen==0 or train_gen):
                     train_gen=True

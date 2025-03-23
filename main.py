@@ -29,7 +29,8 @@ latent_dim = 200  # Dimensión del vector aleatorio de entrada
 df = pd.read_csv('https://raw.githubusercontent.com/sinc-lab/sincFold/main/data/ArchiveII.csv')
 df = df[df['len'] <= 200]
 sequences = df['sequence'].tolist()
-max_seq_length = max(len(seq) for seq in sequences)
+#max_seq_length = max(len(seq) for seq in sequences)
+max_seq_length = 200
 
 # Modelos
 generator = GeneratorCNN(input_dim=latent_dim, output_dim=input_dim, max_seq_length=max_seq_length).to(device)
@@ -68,3 +69,44 @@ loss_function_pretrain = nn.MSELoss()
 
 #pretrain_generator_as_autoencoder(generator, real_data, optimizer_generator, loss_function_pretrain, pretrain_epochs, device, max_seq_length, noise_levels)
 train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename,generated_seq_filename, losses_filename)
+
+import torch
+
+filtro_filename = "filtro.txt"
+filtros = generator.conv[0].weight.detach().cpu().numpy()
+with open(filtro_filename, "w") as file:
+    for i, filtro in enumerate(filtros):
+        file.write(f"Filtro {i}:\n")
+        file.write(str(filtro) + "\n\n")
+
+"""import matplotlib.pyplot as plt
+import numpy as np
+
+# Guardar la matriz de pesos en un archivo de texto
+pesos_filename = "pesos.txt"
+with open(pesos_filename, "w") as f:
+    for i, layer in enumerate(generator.model):
+        if isinstance(layer, torch.nn.Linear):
+            f.write(f"Layer {i} - Linear\n")
+            f.write("Weights:\n")
+            # Convertir los pesos a numpy y guardarlos
+            weights = layer.weight.detach().cpu().numpy()
+            f.write(str(weights) + "\n")
+            f.write("Bias:\n")
+            bias = layer.bias.detach().cpu().numpy()
+            f.write(str(bias) + "\n")
+            f.write("="*50 + "\n")
+
+            # Graficar la matriz de pesos
+            plt.figure(figsize=(10, 8))
+            plt.imshow(weights, cmap='viridis', aspect='auto')  # Usar un mapa de colores adecuado
+            plt.colorbar()
+            plt.title(f'Matriz de Pesos - Layer {i}')
+            plt.xlabel('Neuronas de la capa')
+            plt.ylabel('Pesos de la capa')
+            plt.tight_layout()
+
+            # Guardar la gráfica como imagen PNG
+            plt.savefig(f'pesos_layer_{i} (solo loss mse, CNN).png')
+            plt.close()  # Cerrar la figura para liberar memoria"
+"""

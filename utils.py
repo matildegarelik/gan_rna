@@ -66,6 +66,23 @@ def generate_latent_space_samples(batch_size, max_seq_length, device):
         latent_space_samples[i, length:] = -1
     return latent_space_samples, random_lengths
 
+def generate_latent_space_samples2(batch_size, max_seq_length, device,  real_samples): # usa secuencias reales
+    counts = []
+    for sub_array in real_samples:
+        count = 0
+        for row in sub_array:
+            if torch.all(row == -1):
+                break
+            count += 1
+        counts.append(count)
+
+    counts = np.array(counts)
+    real_samples_continuous = torch.stack([
+        torch.cat([x] * (200 // x.size(0)) + [x[:200 % x.size(0)]]) if x.size(0) < 200 else x[:200]
+        for x in real_samples
+    ]).to(device)
+    real_samples_continuous = torch.stack([one_hot_to_continuous(sample) for sample in real_samples_continuous]).to(device)
+    return real_samples_continuous, counts
 
 def one_hot_to_continuous(one_hot_samples):
     continuous_output = torch.zeros(one_hot_samples.size(0))
