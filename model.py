@@ -69,7 +69,11 @@ class GeneratorCNN(nn.Module):
             #nn.Tanh()  # salida en el rango [-1, 1]
         #)
         self.conv = nn.Conv1d(1, 1, kernel_size=3, stride=1, padding=1)
-        self.tan = nn.Tanh()
+        self.conv.bias.data.fill_(0.0)  # Inicializar el bias en cero
+        self.conv.weight = nn.Parameter(
+            torch.tensor([[[0.0, 1.0, 0.0]]], device='cuda:1', requires_grad=True)
+        )
+        ##self.tan = nn.Tanh()
 
     def forward(self, x):
         batch_size = x.size(0)
@@ -86,7 +90,7 @@ class GeneratorCNN(nn.Module):
         self.conv.weight = nn.Parameter( torch.tensor([[[0.0, 1.0, 0.0]]], device='cuda:1', requires_grad=True))
         # Bloque convolucional
         x = self.conv(x)  # Salida: (batch_size, 1, max_seq_length)
-        x= self.tan(x)
+        #x= self.tan(x)
 
         # Quitar dimensión del canal para la salida final
         x = x.squeeze(1)  # (batch_size, max_seq_length)
