@@ -71,7 +71,7 @@ class GeneratorCNN(nn.Module):
         self.conv = nn.Conv1d(1, 1, kernel_size=3, stride=1, padding=1)
         self.conv.bias.data.fill_(0.0)  # Inicializar el bias en cero
         self.conv.weight = nn.Parameter(
-            torch.tensor([[[0.0, 1.0, 0.0]]], device='cuda:1', requires_grad=True)
+            torch.tensor([[[0.0, 1.0, 0.0]]], device='cpu', requires_grad=True)
         )
         ##self.tan = nn.Tanh()
 
@@ -86,8 +86,8 @@ class GeneratorCNN(nn.Module):
         # Reorganizar para Conv1d
         x = x.view(batch_size, 1, self.max_seq_length)  # (batch_size, 1, max_seq_length)
 
-        # 
-        self.conv.weight = nn.Parameter( torch.tensor([[[0.0, 1.0, 0.0]]], device='cuda:1', requires_grad=True))
+        self.conv.weight = nn.Parameter( torch.tensor([[[0.0, 1.0, 0.0]]], device='cpu', requires_grad=True))
+
         # Bloque convolucional
         x = self.conv(x)  # Salida: (batch_size, 1, max_seq_length)
         #x= self.tan(x)
