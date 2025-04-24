@@ -2,7 +2,7 @@ import csv
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from utils import continuous_to_one_hot, generate_latent_space_samples, one_hot_to_rna_with_padding
+from utils import continuous_to_one_hot_batch, generate_latent_space_samples, one_hot_to_rna_with_padding
 from model import padding_loss
 
 def train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length, mu,log_filename, real_seq_filename,generated_seq_filename, losses_filename):
@@ -48,7 +48,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
             generated_samples = generator(latent_space_samples)
             #print(generated_samples.shape)
-            generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
+            generated_samples_one_hot = continuous_to_one_hot_batch(generated_samples).to(device)
 
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
 
@@ -85,7 +85,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 generator.zero_grad()
                 latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
                 generated_samples = generator(latent_space_samples)
-                generated_samples_one_hot = continuous_to_one_hot(generated_samples).to(device)
+                generated_samples_one_hot = continuous_to_one_hot_batch(generated_samples).to(device)
 
                 # salida del discriminador para las muestras generadas
                 output_discriminator_generated = discriminator(generated_samples_one_hot)

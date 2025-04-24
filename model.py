@@ -104,7 +104,7 @@ class GeneratorCNN(nn.Module):
 
 
 def padding_loss(generated_samples, output_lengths, device):
-    batch_size, max_seq_length = generated_samples.size()
+    batch_size,_, max_seq_length = generated_samples.size()
     loss = torch.zeros(batch_size, device=device) # devuelve el loss por secuencia
 
     for i in range(batch_size):
@@ -124,3 +124,18 @@ def padding_loss(generated_samples, output_lengths, device):
         loss[i] = seq_loss
     
     return loss
+
+class GeneratorCNNOrdinal(nn.Module):
+    def __init__(self, input_dim=1, output_dim=1, max_seq_length=200):
+        super(GeneratorCNNOrdinal, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.max_seq_length = max_seq_length
+
+        self.conv = nn.Conv1d(1, output_dim, kernel_size=3, stride=1, padding=1, bias=False)
+        
+        #self.conv.weight.data=nn.Parameter(torch.zeros(input_dim, 1, 3))
+        #self.conv.weight.data[0, 0, 1] = 1.0 
+
+    def forward(self, x):
+        return self.conv(x)
