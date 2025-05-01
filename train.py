@@ -42,7 +42,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
             # generar muestras falsas
             latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
-            generated_samples = generator(latent_space_samples)
+            generated_samples = generator(real_samples)
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
 
             if epoch < ventaja or train_phase == "discriminator":
@@ -84,7 +84,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 generator.zero_grad()
 
                 latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
-                generated_samples = generator(latent_space_samples)
+                generated_samples = generator(real_samples)
                 output_discriminator_real = discriminator(real_samples)
                 output_discriminator_generated = discriminator(generated_samples)
 

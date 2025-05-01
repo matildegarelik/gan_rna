@@ -44,7 +44,7 @@ train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 latent_dim = 200  # Dimensión del vector aleatorio de entrada
 batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
-num_epochs = 600
+num_epochs = 100
 loss_function = nn.BCELoss(reduction='none')
 mu = .1
 lr = 5e-5
@@ -56,3 +56,12 @@ optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
 optimizer_generator = Adam(generator.parameters(), lr=lr)
 
 train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename,generated_seq_filename, losses_filename)
+
+import torch
+
+filtro_filename = "filtro.txt"
+filtros = filtros = generator.conv.weight.detach().cpu().numpy()
+with open(filtro_filename, "w") as file:
+    for i, filtro in enumerate(filtros):
+        file.write(f"Filtro {i}:\n")
+        file.write(str(filtro) + "\n\n")

@@ -1,0 +1,1 @@
+20250501_084646 -> solo mse de secuencia real, o sea solo busco q genere la misma q a la entrada.
