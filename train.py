@@ -23,8 +23,8 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
     train_phase = "discriminator"
     last_discriminator_loss = None
     last_generator_loss = None
-    umbral_discriminador = 1.10  # 10% aumento
-    umbral_generador = 1.10      # 10% aumento
+    umbral_discriminador = 1.5  # 50% aumento
+    umbral_generador = 1.02      # 2% aumento
     ventaja = 5
 
     discriminator_losses = []
@@ -41,7 +41,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
 
             # generar muestras falsas
-            latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+            # latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
             generated_samples = generator(real_samples)
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
 
@@ -66,12 +66,12 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 optimizer_discriminator.step()
 
                 # loss generador
-                padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
-                generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
-                mse_generator_loss = torch.mean((generated_samples - latent_space_samples) ** 2, dim=1)  # (32, 200)
-                mse_generator_loss = mse_generator_loss.mean(dim=1)  # (32)
+                #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
+                #generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
+                #mse_generator_loss = nn.MSELoss()(generated_samples, real_samples)
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
-                loss_generator = (mse_generator_loss).mean()
+                gen_labels = torch.ones((real_samples.size(0), 1)).to(device)  # el generador quiere engañar al discriminador
+                loss_generator = loss_function(output_discriminator_generated, gen_labels).mean()
                 epoch_generator_losses.append(loss_generator.item())
 
                 last_discriminator_loss= loss_discriminator.item()
@@ -83,18 +83,18 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 discriminator.zero_grad()
                 generator.zero_grad()
 
-                latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
+                #latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
                 generated_samples = generator(real_samples)
                 output_discriminator_real = discriminator(real_samples)
                 output_discriminator_generated = discriminator(generated_samples)
 
                 # loss generador 
-                padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
-                generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
-                mse_generator_loss = torch.mean((generated_samples - latent_space_samples) ** 2, dim=1)  # (32, 200)
-                mse_generator_loss = mse_generator_loss.mean(dim=1)  # (32)
+                #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
+                #generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
+                #mse_generator_loss = nn.MSELoss()(generated_samples, real_samples)
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
-                loss_generator = mse_generator_loss.mean()
+                gen_labels = torch.ones((real_samples.size(0), 1)).to(device) # el generador quiere engañar al discriminador
+                loss_generator = loss_function(output_discriminator_generated, gen_labels).mean()
                 epoch_generator_losses.append(loss_generator.item())
 
                 loss_generator.backward()
@@ -110,12 +110,12 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # log losses y sequences
             for i in range(len(generated_samples)):
                 generated_rna_seq = continuous_to_rna(generated_samples[i].cpu().detach().numpy())  
-                generated_seq_logger.writerow([epoch, n, generated_rna_seq, f"{generator_loss_value[i].item():.2f}"])                          
-                losses_logger.writerow([epoch, 
-                                        f"{generator_loss_value[i].item()}", f"{padding_loss_value[i].item()}", f"{mse_generator_loss[i]}",
-                                        f"{loss_discriminator_real[i].item():.2f}",f"{loss_discriminator_generated[i].item():.2f}",
-                                        train_phase
-                                        ])
+                generated_seq_logger.writerow([epoch, n, generated_rna_seq, f"{loss_generator.item():.2f}"])                          
+                #losses_logger.writerow([epoch, 
+                #                        f"{generator_loss_value[i].item()}", f"{padding_loss_value[i].item()}", f"{mse_generator_loss[i]}",
+                #                        f"{loss_discriminator_real[i].item():.2f}",f"{loss_discriminator_generated[i].item():.2f}",
+                #                        train_phase
+                #                        ])
 
             # log secuencias reales
             for i in range(len(generated_samples)):

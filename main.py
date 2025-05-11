@@ -44,7 +44,7 @@ train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 latent_dim = 200  # Dimensión del vector aleatorio de entrada
 batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
-num_epochs = 100
+num_epochs = 600
 loss_function = nn.BCELoss(reduction='none')
 mu = .1
 lr = 5e-5

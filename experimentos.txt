@@ -1,1 +1,3 @@
-20250501_084646 -> solo mse de secuencia real, o sea solo busco q genere la misma q a la entrada.
+20250506_103559 -> solo mse de secuencia real, o sea solo busco q genere la misma q a la entrada.
+umbral_discriminador=1.5 y generador=1.02
+
