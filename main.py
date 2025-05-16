@@ -29,8 +29,7 @@ print(f"Using device: {device}")
 # DATOS
 df = pd.read_csv('./ArchiveII.csv')
 df = df[df['len'] <= 200]
-sequences = df['sequence'].tolist()
-#max_seq_length = max(len(seq) for seq in sequences)
+sequences = df['sequence'].head(10).tolist()
 max_seq_length = 200
 
 # convertir las secuencias a one-hot y padding
@@ -44,10 +43,10 @@ train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 latent_dim = 200  # Dimensión del vector aleatorio de entrada
 batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
-num_epochs = 600
+num_epochs = 100
 loss_function = nn.BCELoss(reduction='none')
 mu = .1
-lr = 5e-5
+lr = 0.05
 
 # modelos
 generator = GeneratorCNNOrdinal(input_dim=latent_dim, output_dim=1, max_seq_length=max_seq_length).to(device)
