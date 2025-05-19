@@ -44,14 +44,14 @@ latent_dim = 200  # Dimensión del vector aleatorio de entrada
 batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
 num_epochs = 100
-loss_function = nn.BCELoss(reduction='none')
+loss_function = nn.BCELoss()
 mu = .1
-lr = 0.05
+lr = 0.1
 
 # modelos
 generator = GeneratorCNNOrdinal(input_dim=latent_dim, output_dim=1, max_seq_length=max_seq_length).to(device)
 discriminator = Discriminator(input_dim=1, seq_length=max_seq_length).to(device)
-optimizer_discriminator = Adam(discriminator.parameters(), lr=lr)
+optimizer_discriminator = Adam(discriminator.parameters(), lr=lr/10)
 optimizer_generator = Adam(generator.parameters(), lr=lr)
 
 train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename,generated_seq_filename, losses_filename)

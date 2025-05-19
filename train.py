@@ -40,7 +40,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
         for n, (real_samples, _) in enumerate(train_loader):
             real_samples = real_samples.to(device)
             real_samples = one_hot_to_continuous_batch(real_samples, max_seq_length, device)
-            real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) * 0.9  # Label smoothing
+            real_samples_labels = torch.ones((real_samples.size(0), 1)).to(device) 
 
             optimizer_generator.zero_grad()
             optimizer_discriminator.zero_grad()
@@ -49,6 +49,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
             # latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
             generated_samples = generator(real_samples)
             generated_samples_labels = torch.zeros((real_samples.size(0), 1)).to(device)
+            labels = torch.cat((real_samples_labels,generated_samples_labels))
             
             if epoch < ventaja or train_phase == "discriminator":
                 # entrenamiento del discriminador
@@ -56,28 +57,26 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 generator.eval()
 
                 # salida del discriminador para reales y generadas
-                output_discriminator_real = discriminator(real_samples)
-                output_discriminator_generated = discriminator(generated_samples)
+                output_discriminator = discriminator(torch.cat((real_samples,generated_samples)))
 
                 # loss discriminador
-                loss_discriminator_real = loss_function(output_discriminator_real, real_samples_labels)
-                loss_discriminator_generated = loss_function(output_discriminator_generated, generated_samples_labels)
-                loss_discriminator = torch.cat((loss_discriminator_real, loss_discriminator_generated)).mean()
+                loss_discriminator = loss_function(output_discriminator, labels)
                 epoch_discriminator_losses.append(loss_discriminator.item())
 
-                loss_discriminator.backward()
-                optimizer_discriminator.step()
-
+                
                 # loss generador
                 #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
                 #generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
                 #loss_generator = criterio(generated_samples, real_samples)
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
-                gen_labels = torch.ones((real_samples.size(0), 1)).to(device)  # el generador quiere engañar al discriminador
-                loss_generator = loss_function(output_discriminator_generated, gen_labels).mean()
+                #gen_labels = torch.ones((real_samples.size(0), 1)).to(device)  # el generador quiere engañar al discriminador
+                
+                loss_generator = -1*loss_function(output_discriminator, labels)
                 epoch_generator_losses.append(loss_generator.item())
-
                 last_discriminator_loss= loss_discriminator.item()
+
+                loss_discriminator.backward()
+                optimizer_discriminator.step()
 
 
             elif train_phase == "generator":
@@ -87,28 +86,25 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
                 #latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
                 generated_samples = generator(real_samples)
-                output_discriminator_real = discriminator(real_samples)
-                output_discriminator_generated = discriminator(generated_samples)
+                output_discriminator = discriminator(torch.cat((real_samples,generated_samples)))
 
                 # loss generador 
                 #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
                 #generator_loss_value = loss_function(output_discriminator_generated, real_samples_labels)  # (32,1)
                 #loss_generator = criterio(generated_samples, real_samples)
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
-                gen_labels = torch.ones((real_samples.size(0), 1)).to(device) # el generador quiere engañar al discriminador
-                loss_generator = loss_function(output_discriminator_generated, gen_labels).mean()
+                #gen_labels = torch.ones((real_samples.size(0), 1)).to(device) # el generador quiere engañar al discriminador
+                loss_generator = -1*loss_function(output_discriminator, labels)
                 epoch_generator_losses.append(loss_generator.item())
+
+                # loss discriminador
+                loss_discriminator = loss_function(output_discriminator, labels)
+                epoch_discriminator_losses.append(loss_discriminator.item())
 
                 loss_generator.backward()
                 optimizer_generator.step()
 
-                # loss discriminador
-                loss_discriminator_real = loss_function(output_discriminator_real, real_samples_labels)
-                loss_discriminator_generated = loss_function(output_discriminator_generated, generated_samples_labels)
-                loss_discriminator = torch.cat((loss_discriminator_real, loss_discriminator_generated)).mean()
-                epoch_discriminator_losses.append(loss_discriminator.item())
-
-            if epoch == 99:
+            if epoch in (6,99):
                 # log losses y sequences
                 for i in range(len(generated_samples)):
                     generated_rna_seq = continuous_to_rna(generated_samples[i].cpu().detach().numpy())  
@@ -117,7 +113,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 # log secuencias reales
                 for i in range(len(generated_samples)):
                     real_rna_seq = continuous_to_rna(real_samples[i].cpu().detach().numpy())
-                    real_seq_logger.writerow([epoch, n, real_rna_seq, f"{loss_discriminator_real[i].item():.2f}"])
+                    real_seq_logger.writerow([epoch, n, real_rna_seq, "-"])
 
         # Al finalizar la época, decidir cambio de fase
         if epoch > ventaja:
