@@ -111,13 +111,13 @@ def one_hot_to_continuous(one_hot_samples):
 
     for i, one_hot_vector in enumerate(one_hot_samples):
         if one_hot_vector[0] == 1:  # A
-            continuous_output[i] = random.uniform(0, 0.25)
+            continuous_output[i] = 0.1 #random.uniform(0, 0.25)
         elif one_hot_vector[1] == 1:  # C
-            continuous_output[i] = random.uniform(0.25, 0.5)
+            continuous_output[i] = 0.26 #random.uniform(0.25, 0.5)
         elif one_hot_vector[2] == 1:  # G
-            continuous_output[i] = random.uniform(0.5, 0.75)
+            continuous_output[i] = 0.51 #random.uniform(0.5, 0.75)
         elif one_hot_vector[3] == 1:  # U
-            continuous_output[i] = random.uniform(0.75, 1.0)
+            continuous_output[i] = 0.76 #random.uniform(0.75, 1.0)
         elif torch.all(one_hot_vector == -1):  # Padding
             continuous_output[i] = -1
     

@@ -57,12 +57,12 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 generator.eval()
 
                 # salida del discriminador para reales y generadas
-                output_discriminator = discriminator(torch.cat((real_samples,generated_samples)))
-
+                output_discriminator_real = discriminator(real_samples)
+                output_discriminator_fake = discriminator(generated_samples)
+                
                 # loss discriminador
-                loss_discriminator = loss_function(output_discriminator, labels)
+                loss_discriminator = loss_function(output_discriminator_real, real_samples_labels) + loss_function(output_discriminator_fake, generated_samples_labels)                
                 epoch_discriminator_losses.append(loss_discriminator.item())
-
                 
                 # loss generador
                 #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
@@ -71,7 +71,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
                 #gen_labels = torch.ones((real_samples.size(0), 1)).to(device)  # el generador quiere engañar al discriminador
                 
-                loss_generator = -1*loss_function(output_discriminator, labels)
+                loss_generator = loss_function(output_discriminator_fake, real_samples_labels)
                 epoch_generator_losses.append(loss_generator.item())
                 last_discriminator_loss= loss_discriminator.item()
 
@@ -86,7 +86,8 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
 
                 #latent_space_samples, random_lengths = generate_latent_space_samples(real_samples.size(0), max_seq_length, device)
                 generated_samples = generator(real_samples)
-                output_discriminator = discriminator(torch.cat((real_samples,generated_samples)))
+                output_discriminator_real = discriminator(real_samples)
+                output_discriminator_fake = discriminator(generated_samples)
 
                 # loss generador 
                 #padding_loss_value = padding_loss(generated_samples, random_lengths, device)  # (32)
@@ -94,11 +95,11 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
                 #loss_generator = criterio(generated_samples, real_samples)
                 #loss_generator = (generator_loss_value + mu * padding_loss_value + mse_generator_loss).mean()
                 #gen_labels = torch.ones((real_samples.size(0), 1)).to(device) # el generador quiere engañar al discriminador
-                loss_generator = -1*loss_function(output_discriminator, labels)
+                loss_generator = loss_function(output_discriminator_fake, real_samples_labels)
                 epoch_generator_losses.append(loss_generator.item())
 
                 # loss discriminador
-                loss_discriminator = loss_function(output_discriminator, labels)
+                loss_discriminator = loss_function(output_discriminator_real, real_samples_labels) + loss_function(output_discriminator_fake, generated_samples_labels)
                 epoch_discriminator_losses.append(loss_discriminator.item())
 
                 loss_generator.backward()
@@ -118,7 +119,7 @@ def train(generator, discriminator, train_loader, loss_function, optimizer_discr
         # Al finalizar la época, decidir cambio de fase
         if epoch > ventaja:
             if train_phase == "discriminator":
-                if last_generator_loss is not None and epoch_generator_losses[-1] > last_generator_loss * umbral_generador or last_d<1:
+                if last_generator_loss is not None and epoch_generator_losses[-1] > last_generator_loss * umbral_generador:
                     print("Cambiando a entrenamiento del generador")
                     train_phase = "generator"
                     
