@@ -6,7 +6,7 @@ from torch import nn
 from torch.optim import Adam, SGD
 from utils import rna_to_one_hot, one_hot_to_rna_with_padding
 from model import Discriminator,GeneratorCNNOrdinal
-from train import train
+from train import train, train2
 import os
 from datetime import datetime
 
@@ -43,7 +43,7 @@ train_set = [(real_data[i], train_labels[i]) for i in range(train_data_length)]
 latent_dim = 200  # Dimensión del vector aleatorio de entrada
 batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
-num_epochs = 100
+num_epochs = 500
 loss_function = nn.BCELoss()
 mu = .1
 lr = 0.1
@@ -54,7 +54,7 @@ discriminator = Discriminator(input_dim=1, seq_length=max_seq_length).to(device)
 optimizer_discriminator = Adam(discriminator.parameters(), lr=lr/10)
 optimizer_generator = Adam(generator.parameters(), lr=lr)
 
-train(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename,generated_seq_filename, losses_filename)
+train2(generator, discriminator, train_loader, loss_function, optimizer_discriminator, optimizer_generator, num_epochs, device, latent_dim, max_seq_length,mu, log_filename, real_sequences_filename,generated_seq_filename, losses_filename)
 
 import torch
 
