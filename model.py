@@ -126,7 +126,7 @@ def padding_loss(generated_samples, output_lengths, device):
     return loss
 
 class GeneratorCNNOrdinal(nn.Module):
-    def __init__(self, input_dim=1, output_dim=1, max_seq_length=200):
+    def __init__(self, input_dim=1, output_dim=1, max_seq_length=200, initial_weights=None):
         super(GeneratorCNNOrdinal, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -136,6 +136,13 @@ class GeneratorCNNOrdinal(nn.Module):
         
         #self.conv.weight.data=nn.Parameter(torch.zeros(input_dim, 1, 3))
         #self.conv.weight.data[0, 0, 1] = 1.0 
+        
+        # initializing to the optimum (for real sequences as input)
+        if initial_weights is not None:
+            self.conv.weight = nn.Parameter(torch.tensor([[initial_weights]], device=self.conv.weight.device, requires_grad=True))
 
     def forward(self, x):
+        # reset to the optimum (for real sequences as input)
+        #self.conv.weight = nn.Parameter(torch.tensor([[[0.0, 1.0, 0.0]]], device=x.device, requires_grad=True))
+
         return self.conv(x)
